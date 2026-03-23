@@ -7,20 +7,20 @@ def home(request):
 
 def education(request):
     """Страница обучения"""
-    return render(request, 'skill.html')
+    return render(request, 'index.html')  # временно показывает главную
 
-def travel(request):
-    """Страница путешествий"""
-    return render(request, 'trips.html')
+def community(request):
+    """Страница сообщества"""
+    return HttpResponse("Сообщество - в разработке")
 
 def ratings(request):
     """Страница рейтингов"""
-    return HttpResponse("Страница рейтингов учеников и путешественников")
+    return HttpResponse("Рейтинги учеников - в разработке")
 
-def login(request):
+def login_view(request):
     """Страница входа"""
-    return HttpResponse("Страница входа")
+    return HttpResponse("Страница входа - в разработке")
 
-def register(request):
+def register_view(request):
     """Страница регистрации"""
-    return HttpResponse("Страница регистрации")
+    return HttpResponse("Страница регистрации - в разработке")
