@@ -1,7 +1,11 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from django.contrib import messages
 import json
 from .services.mistral_service import MistralService
 from .models import Course, Community, Achievement
@@ -11,11 +15,8 @@ mistral_service = MistralService()
 
 def home(request):
     """Главная страница"""
-    # Получаем опубликованные курсы
     courses = Course.objects.filter(status='published').order_by('order', '-created_at')
-    # Получаем активные сообщества
     communities = Community.objects.filter(is_active=True).order_by('order', 'name')
-    # Получаем достижения
     achievements = Achievement.objects.filter(is_active=True)
 
     context = {
@@ -43,14 +44,72 @@ def ratings(request):
     return HttpResponse("Рейтинги учеников - в разработке")
 
 
-def login_view(request):
-    """Страница входа"""
-    return HttpResponse("Страница входа - в разработке")
-
-
 def register_view(request):
     """Страница регистрации"""
-    return HttpResponse("Страница регистрации - в разработке")
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        email = request.POST.get('email')
+        password1 = request.POST.get('password1')
+        password2 = request.POST.get('password2')
+
+        if password1 != password2:
+            messages.error(request, 'Пароли не совпадают')
+            return redirect('register')
+
+        if User.objects.filter(username=username).exists():
+            messages.error(request, 'Пользователь с таким именем уже существует')
+            return redirect('register')
+
+        if User.objects.filter(email=email).exists():
+            messages.error(request, 'Пользователь с таким email уже существует')
+            return redirect('register')
+
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            password=password1
+        )
+
+        login(request, user)
+        messages.success(request, 'Регистрация успешно завершена!')
+        return redirect('home')
+
+    return render(request, 'register.html')
+
+
+def login_view(request):
+    """Страница входа"""
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+
+        user = authenticate(request, username=username, password=password)
+
+        if user is not None:
+            login(request, user)
+            messages.success(request, f'Добро пожаловать, {user.username}!')
+            return redirect('home')
+        else:
+            messages.error(request, 'Неверное имя пользователя или пароль')
+
+    return render(request, 'login.html')
+
+
+def logout_view(request):
+    """Выход из аккаунта"""
+    logout(request)
+    messages.success(request, 'Вы вышли из аккаунта')
+    return redirect('home')
+
+
+@login_required
+def profile_view(request):
+    """Страница профиля пользователя"""
+    achievements = Achievement.objects.filter(is_active=True)
+    return render(request, 'profile.html', {
+        'user': request.user,
+        'achievements': achievements
+    })
 
 
 @csrf_exempt
@@ -79,3 +138,15 @@ def chat_api(request):
         return JsonResponse({'error': 'Неверный формат JSON'}, status=400)
     except Exception as e:
         return JsonResponse({'error': f'Внутренняя ошибка сервера: {str(e)}'}, status=500)
+
+
+def all_courses(request):
+    """Страница со всеми курсами"""
+    courses = Course.objects.filter(status='published').order_by('order', '-created_at')
+    return render(request, 'courses.html', {'courses': courses})
+
+
+def all_communities(request):
+    """Страница со всеми сообществами"""
+    communities = Community.objects.filter(is_active=True).order_by('order', 'name')
+    return render(request, 'communities.html', {'communities': communities})

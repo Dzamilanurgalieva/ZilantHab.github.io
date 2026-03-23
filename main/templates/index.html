@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -510,14 +511,22 @@
 
 <nav class="navbar fixed-top" id="navbar">
     <div class="container-custom d-flex justify-content-between align-items-center w-100">
-        <a class="navbar-brand" href="#"><i class="fas fa-crown me-2"></i>TatarSkill</a>
+        <a class="navbar-brand" href="/"><i class="fas fa-crown me-2"></i>TatarSkill</a>
         <div class="d-flex gap-2 align-items-center">
             <!-- Кнопки перевода -->
             <button class="lang-btn active" id="langRu">Рус</button>
             <button class="lang-btn" id="langTt">Тат</button>
             <!-- Кнопки входа и регистрации -->
-            <a href="#" class="btn-outline-custom me-2 d-none d-sm-inline-block" data-bs-toggle="modal" data-bs-target="#loginModal">Войти</a>
-            <a href="#" class="btn-primary-custom" data-bs-toggle="modal" data-bs-target="#registerModal">Регистрация</a>
+            {% if user.is_authenticated %}
+                <span class="text-warning me-2">
+                    <i class="fas fa-user me-1"></i>{{ user.username }}
+                </span>
+                <a href="{% url 'profile' %}" class="btn-outline-custom me-2">Профиль</a>
+                <a href="{% url 'logout' %}" class="btn-outline-custom">Выйти</a>
+            {% else %}
+                <a href="{% url 'login' %}" class="btn-outline-custom me-2 d-none d-sm-inline-block">Войти</a>
+                <a href="{% url 'register' %}" class="btn-primary-custom">Регистрация</a>
+            {% endif %}
         </div>
     </div>
 </nav>
@@ -581,6 +590,10 @@
                 </div>
             </div>
         </div>
+        <!-- Кнопка "Все курсы" -->
+        <div class="text-center mt-5">
+            <a href="{% url 'all_courses' %}" class="btn-outline-custom">Все курсы →</a>
+        </div>
     </div>
 </section>
 
@@ -609,6 +622,10 @@
         </div>
         <div class="swiper-button-prev-comm"><i class="fas fa-chevron-left"></i></div>
         <div class="swiper-button-next-comm"><i class="fas fa-chevron-right"></i></div>
+    </div>
+    <!-- Кнопка "Все сообщества" -->
+    <div class="text-center mt-4">
+        <a href="{% url 'all_communities' %}" class="btn-outline-custom">Все сообщества →</a>
     </div>
 </div>
 
@@ -853,6 +870,14 @@
             }
         });
     });
+
+    // Обновление навбара при загрузке страницы
+    document.addEventListener('DOMContentLoaded', function() {
+        const navbar = document.getElementById('navbar');
+        if (navbar) {
+            // Здесь можно добавить логику обновления
+        }
+    })
 </script>
 </body>
 </html>

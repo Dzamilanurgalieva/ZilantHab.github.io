@@ -1,0 +1,491 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>{% block title %}TatarSkill{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a1f0f;
+            color: #1e3a2e;
+            overflow-x: hidden;
+        }
+
+        .video-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -2;
+            filter: brightness(0.4) contrast(1.1);
+        }
+
+        .overlay-gradient {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(10, 31, 15, 0.85) 0%, rgba(30, 58, 42, 0.88) 100%);
+            z-index: -1;
+        }
+
+        .container-custom {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        h1, h2, h3, .heading {
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .gold-gradient {
+            background: linear-gradient(135deg, #f5c542, #e6b17e);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .btn-primary-custom {
+            background: linear-gradient(135deg, #f5b642, #e6a02e);
+            border: none;
+            color: #1e3a2e;
+            font-weight: 700;
+            padding: 14px 36px;
+            border-radius: 12px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(230, 161, 46, 0.3);
+        }
+        .btn-primary-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgba(230, 161, 46, 0.4);
+            background: linear-gradient(135deg, #f5c542, #f5b642);
+        }
+
+        .btn-outline-custom {
+            background: transparent;
+            border: 2px solid #f5c542;
+            color: #f5c542;
+            font-weight: 600;
+            padding: 12px 32px;
+            border-radius: 12px;
+            transition: all 0.2s;
+        }
+        .btn-outline-custom:hover {
+            background: rgba(245, 197, 66, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .navbar {
+            background: rgba(10, 31, 15, 0.85);
+            backdrop-filter: blur(12px);
+            padding: 16px 0;
+            border-bottom: 1px solid rgba(245, 197, 66, 0.2);
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        .navbar-brand {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #f5c542;
+        }
+        .navbar-brand i {
+            color: #f5c542;
+        }
+
+        .card-glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            border-radius: 32px;
+            border: 1px solid rgba(245, 197, 66, 0.3);
+            transition: all 0.3s ease;
+        }
+        .card-glass:hover {
+            transform: translateY(-6px);
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #f5c542;
+        }
+
+        .community-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            border-radius: 24px;
+            padding: 20px 16px;
+            text-align: center;
+            transition: all 0.3s;
+            border: 1px solid rgba(245, 197, 66, 0.2);
+            cursor: pointer;
+            color: white;
+            height: 100%;
+        }
+        .community-card:hover {
+            transform: translateY(-6px);
+            border-color: #f5c542;
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .community-icon {
+            width: 60px;
+            height: 60px;
+            background: rgba(245, 197, 66, 0.2);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 1.6rem;
+            color: #f5c542;
+        }
+
+        .section-title {
+            font-size: 2.3rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: white;
+        }
+        .section-subtitle {
+            color: rgba(255,255,255,0.7);
+        }
+
+        /* Стили для динозаврика и чата */
+        .ai-widget {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 1000;
+        }
+        .ai-dino {
+            width: 120px;
+            cursor: pointer;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3));
+            transition: all 0.3s;
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .ai-dino:hover {
+            transform: scale(1.05) rotate(3deg);
+        }
+
+        .chat-popup {
+            position: fixed;
+            bottom: 160px;
+            right: 30px;
+            width: 380px;
+            max-width: calc(100vw - 40px);
+            background: #1a2a1f;
+            border-radius: 28px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.4);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 999;
+            border: 1px solid rgba(245, 197, 66, 0.3);
+            animation: slideIn 0.25s ease;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .chat-header {
+            background: linear-gradient(135deg, #f5c542, #e6a02e);
+            padding: 16px 20px;
+            color: #1e3a2e;
+            font-weight: 700;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+        .chat-messages {
+            height: 340px;
+            overflow-y: auto;
+            padding: 16px;
+            background: #0f1f12;
+        }
+        .chat-input-area {
+            display: flex;
+            gap: 10px;
+            padding: 16px;
+            border-top: 1px solid rgba(245, 197, 66, 0.2);
+            background: #1a2a1f;
+        }
+        .chat-input {
+            flex: 1;
+            border: 1px solid rgba(245, 197, 66, 0.3);
+            border-radius: 40px;
+            padding: 10px 16px;
+            outline: none;
+            background: #2a3a2a;
+            color: white;
+        }
+        .chat-input:focus {
+            border-color: #f5c542;
+        }
+        .typing-indicator {
+            display: inline-block;
+            padding: 12px 18px;
+            background: #2a3a2a;
+            border-radius: 20px;
+            color: #f5c542;
+            font-size: 0.9rem;
+        }
+        .typing-indicator span {
+            animation: blink 1.4s infinite;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 1; }
+        }
+        @media (max-width: 550px) {
+            .chat-popup { width: 320px; right: 10px; bottom: 130px; }
+            .ai-dino { width: 85px; }
+        }
+
+        footer {
+            background: #0a1f0f;
+            color: #a0c0a0;
+            margin-top: 60px;
+            border-top: 1px solid rgba(245, 197, 66, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            .section-title { font-size: 1.8rem; }
+        }
+    </style>
+</head>
+<body>
+
+<video class="video-background" autoplay muted loop playsinline>
+    <source src="https://assets.mixkit.co/videos/preview/mixkit-aerial-view-of-historic-buildings-in-kazan-32928-large.mp4" type="video/mp4">
+</video>
+<div class="overlay-gradient"></div>
+
+<!-- Динозаврик и чат -->
+<div class="ai-widget">
+    <img src="https://i.imgur.com/B1JNg55.png" alt="ИИ помощник" class="ai-dino" id="dinoBtn">
+</div>
+
+<div class="chat-popup" id="chatPopup">
+    <div class="chat-header" id="closeChat">
+        <span><i class="fas fa-robot me-2"></i> ИИ-репетитор · Татарча</span>
+        <i class="fas fa-times"></i>
+    </div>
+    <div class="chat-messages" id="chatMessages">
+        <div class="d-flex mb-2 justify-content-start">
+            <div class="p-3 rounded-4" style="max-width: 85%; background: #2a3a2a; color: #f5c542;">
+                ✨ Исәнмесез! Я ИИ-репетитор. Помогу выучить татарский, проверю произношение. Спрашивай!
+            </div>
+        </div>
+    </div>
+    <div class="chat-input-area">
+        <input type="text" class="chat-input" id="chatInput" placeholder="Спроси на татарском или русском...">
+        <button class="btn-primary-custom" style="padding: 8px 20px;" id="sendChat">→</button>
+    </div>
+</div>
+
+<nav class="navbar fixed-top">
+    <div class="container-custom d-flex justify-content-between align-items-center w-100">
+        <a class="navbar-brand" href="/"><i class="fas fa-crown me-2"></i>TatarSkill</a>
+        <div class="d-flex gap-2 align-items-center">
+            {% if user.is_authenticated %}
+                <span class="text-warning me-2">
+                    <i class="fas fa-user me-1"></i>{{ user.username }}
+                </span>
+                <a href="{% url 'profile' %}" class="btn-outline-custom me-2">Профиль</a>
+                <a href="{% url 'logout' %}" class="btn-outline-custom">Выйти</a>
+            {% else %}
+                <a href="{% url 'login' %}" class="btn-outline-custom me-2 d-none d-sm-inline-block">Войти</a>
+                <a href="{% url 'register' %}" class="btn-primary-custom">Регистрация</a>
+            {% endif %}
+        </div>
+    </div>
+</nav>
+
+<main>
+    {% block content %}{% endblock %}
+</main>
+
+<footer class="pt-5 pb-4">
+    <div class="container-custom">
+        <div class="row">
+            <div class="col-md-4"><h5 class="text-warning"><i class="fas fa-crown me-2"></i>TatarSkill</h5><p class="small opacity-75">Образовательная экосистема на татарском языке. AI-репетитор + сообщества + кланы.</p></div>
+            <div class="col-md-2"><h6 class="text-warning">Обучение</h6><ul class="list-unstyled small"><li><a href="{% url 'all_courses' %}" class="text-light text-decoration-none opacity-75">Курсы</a></li><li><a href="#" class="text-light text-decoration-none opacity-75">AI-ассистент</a></li></ul></div>
+            <div class="col-md-2"><h6 class="text-warning">Сообщества</h6><ul class="list-unstyled small"><li><a href="{% url 'all_communities' %}" class="text-light text-decoration-none opacity-75">Все сообщества</a></li></ul></div>
+            <div class="col-md-4"><h6 class="text-warning">Контакты</h6><p class="small opacity-75">Казань, ул. Татарстан, 12<br>support@skillhub.ru</p><div class="d-flex gap-3"><i class="fab fa-telegram opacity-75"></i><i class="fab fa-vk opacity-75"></i></div></div>
+        </div>
+        <hr class="opacity-25"><div class="text-center small opacity-50">© 2026 TatarSkill. Учи татарский с AI и энтузиастами.</div>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+<script>
+    // История диалога для контекста
+    let conversationHistory = [
+        {
+            role: "system",
+            content: "Ты — дружелюбный ИИ-репетитор татарского языка. Твоя задача помогать пользователям изучать татарский язык. Отвечай на русском или татарском языке в зависимости от вопроса пользователя. Если пользователь пишет на татарском, отвечай на татарском. Если на русском — отвечай на русском. Ты должен быть терпеливым, объяснять грамматику, помогать с произношением, давать примеры предложений. Будь вежливым и мотивирующим. Используй приветствия на татарском: 'Исәнмесез!', 'Рәхим итегез!' и т.д. Не используй markdown, только обычный текст."
+        }
+    ];
+
+    // AI Чат с Django Backend
+    const chatPopup = document.getElementById('chatPopup');
+    const dinoBtn = document.getElementById('dinoBtn');
+    const closeChat = document.getElementById('closeChat');
+    const chatMessagesDiv = document.getElementById('chatMessages');
+    const chatInput = document.getElementById('chatInput');
+    const sendBtn = document.getElementById('sendChat');
+
+    let isTyping = false;
+
+    function addMessage(text, isUser = true) {
+        const div = document.createElement('div');
+        div.className = `d-flex mb-2 ${isUser ? 'justify-content-end' : 'justify-content-start'}`;
+        div.innerHTML = `<div class="p-3 rounded-4" style="max-width:85%; background:${isUser ? '#f5c542' : '#2a3a2a'}; color:${isUser ? '#1e3a2e' : '#f5c542'}">${text}</div>`;
+        chatMessagesDiv.appendChild(div);
+        chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
+    }
+
+    function showTypingIndicator() {
+        const typingDiv = document.createElement('div');
+        typingDiv.className = 'd-flex mb-2 justify-content-start typing-container';
+        typingDiv.innerHTML = `<div class="typing-indicator"><span>●</span> <span>●</span> <span>●</span></div>`;
+        chatMessagesDiv.appendChild(typingDiv);
+        chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
+        return typingDiv;
+    }
+
+    function removeTypingIndicator(typingDiv) {
+        if (typingDiv && typingDiv.parentNode) {
+            typingDiv.remove();
+        }
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    async function getMistralResponse(userMessage) {
+        try {
+            conversationHistory.push({
+                role: "user",
+                content: userMessage
+            });
+
+            const response = await fetch('/api/chat/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    message: userMessage,
+                    history: conversationHistory.slice(0, -1)
+                })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Ошибка сервера');
+            }
+
+            const data = await response.json();
+            const assistantMessage = data.response;
+
+            conversationHistory.push({
+                role: "assistant",
+                content: assistantMessage
+            });
+
+            return assistantMessage;
+
+        } catch (error) {
+            console.error('Error:', error);
+            return "Кызганыч, хәзер җавап бирә алмыйм. Зинһар, соңрак яңадан тырышыгыз. 😊\n\n(Извините, сейчас не могу ответить. Пожалуйста, попробуйте позже.)";
+        }
+    }
+
+    async function sendMessageToAI() {
+        const text = chatInput.value.trim();
+        if (!text) return;
+        if (isTyping) return;
+
+        addMessage(text, true);
+        chatInput.value = '';
+
+        const typingDiv = showTypingIndicator();
+        isTyping = true;
+
+        try {
+            const response = await getMistralResponse(text);
+            removeTypingIndicator(typingDiv);
+            addMessage(response, false);
+        } catch (error) {
+            removeTypingIndicator(typingDiv);
+            addMessage("⚠️ Ошибка подключения к AI. Проверьте интернет и попробуйте снова.", false);
+        } finally {
+            isTyping = false;
+        }
+    }
+
+    sendBtn.addEventListener('click', sendMessageToAI);
+    chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendMessageToAI();
+    });
+
+    dinoBtn.addEventListener('click', () => {
+        chatPopup.style.display = 'flex';
+    });
+
+    closeChat.addEventListener('click', () => {
+        chatPopup.style.display = 'none';
+    });
+
+    // Открытие чата из кнопки "Поговорить с AI"
+    function openChatFromButton() {
+        chatPopup.style.display = 'flex';
+        const messages = document.querySelectorAll('#chatMessages .justify-content-start');
+        if (messages.length === 0 || !messages[0].innerText.includes('Исәнмесез')) {
+            addMessage("Исәнмесез! Я AI-репетитор. Помогу выучить татарский язык. Спрашивайте! 😊", false);
+        }
+    }
+
+    // Делаем функцию глобальной для использования в дочерних шаблонах
+    window.openChatFromButton = openChatFromButton;
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

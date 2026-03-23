@@ -1,6 +1,8 @@
 from django.db import models
 from django.utils import timezone
-
+from django.contrib.auth.models import User
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 class Course(models.Model):
     """Модель для курсов"""
@@ -130,3 +132,37 @@ class Achievement(models.Model):
 
     def __str__(self):
         return self.name
+
+
+# ... существующие модели Course, Lesson, Community, Achievement остаются ...
+
+class Profile(models.Model):
+    """Модель профиля пользователя"""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    bio = models.TextField('О себе', max_length=500, blank=True)
+    phone = models.CharField('Телефон', max_length=20, blank=True)
+    city = models.CharField('Город', max_length=100, blank=True)
+
+    total_points = models.PositiveIntegerField('Всего очков', default=0)
+    lessons_completed = models.PositiveIntegerField('Пройдено уроков', default=0)
+    created_at = models.DateTimeField('Дата регистрации', auto_now_add=True)
+    last_active = models.DateTimeField('Последняя активность', auto_now=True)
+
+    class Meta:
+        verbose_name = 'Профиль'
+        verbose_name_plural = 'Профили'
+
+    def __str__(self):
+        return f'Профиль {self.user.username}'
+
+
+# Сигналы для автоматического создания профиля
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        Profile.objects.create(user=instance)
+
+
+@receiver(post_save, sender=User)
+def save_user_profile(sender, instance, **kwargs):
+    instance.profile.save()

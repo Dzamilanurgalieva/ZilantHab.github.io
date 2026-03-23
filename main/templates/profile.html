@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Мой профиль — TatarSkill{% endblock %}
+
+{% block content %}
+<div class="container-custom py-5" style="margin-top: 100px;">
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card-glass p-4 text-center">
+                <div class="mb-3">
+                    <i class="fas fa-user-circle fa-5x text-warning"></i>
+                </div>
+                <h3 class="text-white">{{ user.username }}</h3>
+                <p class="text-white-50">{{ user.email }}</p>
+                <hr class="border-warning">
+                <p class="text-white-50">
+                    <i class="fas fa-calendar me-2"></i>
+                    Зарегистрирован: {{ user.date_joined|date:"d.m.Y" }}
+                </p>
+                <a href="{% url 'logout' %}" class="btn-outline-custom w-100 mt-3">Выйти</a>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card-glass p-4">
+                <h3 class="text-warning mb-4">Статистика обучения</h3>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="bg-dark rounded p-3 text-center">
+                            <i class="fas fa-book fa-2x text-warning mb-2"></i>
+                            <h4 class="text-white">{{ user.profile.lessons_completed|default:0 }}</h4>
+                            <p class="text-white-50">Пройдено уроков</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="bg-dark rounded p-3 text-center">
+                            <i class="fas fa-star fa-2x text-warning mb-2"></i>
+                            <h4 class="text-white">{{ user.profile.total_points|default:0 }}</h4>
+                            <p class="text-white-50">Всего очков</p>
+                        </div>
+                    </div>
+                </div>
+
+                <h4 class="text-warning mt-4 mb-3">Достижения</h4>
+                <div class="row">
+                    {% for achievement in achievements %}
+                    <div class="col-6 col-md-4 mb-3">
+                        <div class="achievement-item locked text-center p-3">
+                            <i class="{{ achievement.icon_class }} fa-2x text-warning mb-2"></i>
+                            <div class="achievement-name">{{ achievement.name }}</div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-white-50">Выполняйте уроки, чтобы открывать достижения!</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
