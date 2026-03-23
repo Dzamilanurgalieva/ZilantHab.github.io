@@ -8,4 +8,5 @@ urlpatterns = [
     path('ratings/', views.ratings, name='ratings'),
     path('login/', views.login_view, name='login'),
     path('register/', views.register_view, name='register'),
+    path('api/chat/', views.chat_api, name='chat_api'),  # 👈 ДОБАВЬТЕ ЭТУ СТРОКУ
 ]

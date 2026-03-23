@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
     <style>
+        /* Ваши стили остаются без изменений */
         * {
             margin: 0;
             padding: 0;
@@ -22,7 +23,6 @@
             overflow-x: hidden;
         }
 
-        /* Видео фон */
         .video-background {
             position: fixed;
             top: 0;
@@ -178,7 +178,6 @@
             color: #f5c542;
         }
 
-        /* Сообщества - фиксированная ширина карточек, по 3-5 на экране */
         .communities-section {
             margin: 60px 0;
             position: relative;
@@ -269,7 +268,6 @@
             .swiper-communities .swiper-slide { width: 170px; }
         }
 
-        /* Кланы */
         .clans-section {
             background: linear-gradient(135deg, #1e3a2e, #0f2a1a);
             border-radius: 48px;
@@ -300,7 +298,6 @@
             font-weight: 700;
         }
 
-        /* Достижения */
         .achievements-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
@@ -331,7 +328,6 @@
             color: rgba(255,255,255,0.7);
         }
 
-        /* AI чат */
         .ai-widget {
             position: fixed;
             bottom: 30px;
@@ -407,6 +403,21 @@
         }
         .chat-input:focus {
             border-color: #f5c542;
+        }
+        .typing-indicator {
+            display: inline-block;
+            padding: 12px 18px;
+            background: #2a3a2a;
+            border-radius: 20px;
+            color: #f5c542;
+            font-size: 0.9rem;
+        }
+        .typing-indicator span {
+            animation: blink 1.4s infinite;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 1; }
         }
         @media (max-width: 550px) {
             .chat-popup { width: 320px; right: 10px; bottom: 130px; }
@@ -535,7 +546,6 @@
     </div>
 </section>
 
-<!-- Сообщества - компактная лента со стрелками, показывает 3-5 карточек -->
 <div class="communities-section">
     <div class="container-custom">
         <div class="text-center mb-4">
@@ -614,7 +624,15 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 <script>
-    // Swiper для сообществ - компактная лента
+    // История диалога для контекста
+    let conversationHistory = [
+        {
+            role: "system",
+            content: "Ты — дружелюбный AI-репетитор татарского языка. Твоя задача помогать пользователям изучать татарский язык. Отвечай на русском или татарском языке в зависимости от вопроса пользователя. Если пользователь пишет на татарском, отвечай на татарском. Если на русском — отвечай на русском. Ты должен быть терпеливым, объяснять грамматику, помогать с произношением, давать примеры предложений. Будь вежливым и мотивирующим. Используй приветствия на татарском: 'Исәнмесез!', 'Рәхим итегез!' и т.д. Не используй markdown, только обычный текст."
+        }
+    ];
+
+    // Swiper для сообществ
     const communitiesSwiper = new Swiper('.swiper-communities', {
         slidesPerView: 'auto',
         spaceBetween: 20,
@@ -629,13 +647,15 @@
         }
     });
 
-    // AI Чат
+    // AI Чат с Django Backend
     const chatPopup = document.getElementById('chatPopup');
     const dinoBtn = document.getElementById('dinoBtn');
     const closeChat = document.getElementById('closeChat');
     const chatMessagesDiv = document.getElementById('chatMessages');
     const chatInput = document.getElementById('chatInput');
     const sendBtn = document.getElementById('sendChat');
+
+    let isTyping = false;
 
     function addMessage(text, isUser = true) {
         const div = document.createElement('div');
@@ -645,29 +665,122 @@
         chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
     }
 
-    function aiResponse(msg) {
-        const lower = msg.toLowerCase();
-        if (lower.includes('привет') || lower.includes('сәлам')) return "Исәнмесез! Мин AI-репетитор. Татарча сөйләшәбезме?";
-        if (lower.includes('семья') || lower.includes('гаилә')) return "Минем гаиләм: әти, әни, абый, апа. Ә сезнең гаиләгез ничек?";
-        if (lower.includes('произношение') || lower.includes('әйтелеш')) return "Әйтегез «әни». Мин сезнең әйтелешне тикшерим!";
-        if (lower.includes('татарский') || lower.includes('татарча')) return "Татар теле — бик матур тел. Алфавиттан башлыйкмы?";
-        return "Мин сезгә татар телен өйрәнергә ярдәм итәм. Сорау бирегез! ✨";
+    function showTypingIndicator() {
+        const typingDiv = document.createElement('div');
+        typingDiv.className = 'd-flex mb-2 justify-content-start typing-container';
+        typingDiv.innerHTML = `<div class="typing-indicator"><span>●</span> <span>●</span> <span>●</span></div>`;
+        chatMessagesDiv.appendChild(typingDiv);
+        chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
+        return typingDiv;
     }
 
-    sendBtn.addEventListener('click', () => {
+    function removeTypingIndicator(typingDiv) {
+        if (typingDiv && typingDiv.parentNode) {
+            typingDiv.remove();
+        }
+    }
+
+    // Функция для получения CSRF токена
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    async function getMistralResponse(userMessage) {
+        try {
+            // Добавляем сообщение пользователя в историю
+            conversationHistory.push({
+                role: "user",
+                content: userMessage
+            });
+
+            // Отправляем запрос к Django backend
+            const response = await fetch('/api/chat/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    message: userMessage,
+                    history: conversationHistory.slice(0, -1)
+                })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Ошибка сервера');
+            }
+
+            const data = await response.json();
+            const assistantMessage = data.response;
+
+            // Добавляем ответ в историю
+            conversationHistory.push({
+                role: "assistant",
+                content: assistantMessage
+            });
+
+            return assistantMessage;
+
+        } catch (error) {
+            console.error('Error:', error);
+            return "Кызганыч, хәзер җавап бирә алмыйм. Зинһар, соңрак яңадан тырышыгыз. 😊\n\n(Извините, сейчас не могу ответить. Пожалуйста, попробуйте позже.)";
+        }
+    }
+
+    async function sendMessageToAI() {
         const text = chatInput.value.trim();
         if (!text) return;
-        addMessage(text, true);
-        setTimeout(() => addMessage(aiResponse(text), false), 300);
-        chatInput.value = '';
-    });
-    chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendBtn.click(); });
+        if (isTyping) return;
 
-    dinoBtn.addEventListener('click', () => { chatPopup.style.display = 'flex'; });
-    closeChat.addEventListener('click', () => { chatPopup.style.display = 'none'; });
+        addMessage(text, true);
+        chatInput.value = '';
+
+        const typingDiv = showTypingIndicator();
+        isTyping = true;
+
+        try {
+            const response = await getMistralResponse(text);
+            removeTypingIndicator(typingDiv);
+            addMessage(response, false);
+        } catch (error) {
+            removeTypingIndicator(typingDiv);
+            addMessage("⚠️ Ошибка подключения к AI. Проверьте интернет и попробуйте снова.", false);
+        } finally {
+            isTyping = false;
+        }
+    }
+
+    sendBtn.addEventListener('click', sendMessageToAI);
+    chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendMessageToAI();
+    });
+
+    dinoBtn.addEventListener('click', () => {
+        chatPopup.style.display = 'flex';
+    });
+
+    closeChat.addEventListener('click', () => {
+        chatPopup.style.display = 'none';
+    });
+
     document.getElementById('openChatBtn').addEventListener('click', () => {
         chatPopup.style.display = 'flex';
-        addMessage("Исәнмесез! Татарча сөйләшәбезме? 😊", false);
+        const messages = document.querySelectorAll('#chatMessages .justify-content-start');
+        if (messages.length === 0 || !messages[0].innerText.includes('Исәнмесез')) {
+            addMessage("Исәнмесез! Я AI-репетитор. Помогу выучить татарский язык. Спрашивайте! 😊", false);
+        }
     });
 
     document.querySelectorAll('.community-card, .clan-card, .achievement-item').forEach(el => {
