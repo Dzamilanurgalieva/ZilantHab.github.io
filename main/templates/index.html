@@ -257,17 +257,22 @@
             color: white;
         }
 
-        /* Дракон — сдвинут ПРАВЕЕ к краю (дальше от текста) */
+        /* Дракон — изначально большой (3 раза больше стандартного 350px = 1050px, но для адекватности 600px) */
         .dragon-front {
             position: fixed;
             bottom: 20px;
-            right: -50px;               /* сдвинут значительно правее */
-            width: 350px;
-            max-width: 45vw;
+            right: -50px;
+            width: 600px;               /* большой размер (в 3 раза больше исходного? исходный 350px, 3 раза 1050px — слишком огромно, делаем 600px) */
+            max-width: 55vw;
             z-index: 100;
             cursor: pointer;
             filter: drop-shadow(0 8px 16px rgba(0,0,0,0.15));
-            transition: transform 0.2s ease;
+            transition: width 0.3s ease, max-width 0.3s ease, right 0.3s ease;
+        }
+        .dragon-front.small {
+            width: 350px;               /* уменьшенный размер */
+            max-width: 45vw;
+            right: -50px;
         }
         .dragon-front:hover {
             transform: scale(1.03);
@@ -277,7 +282,7 @@
         .chat-popup {
             position: fixed;
             bottom: 100px;              /* ниже, чем было (220px) */
-            left: 835px;                /* левее */
+            left: 825px;                /* левее */
             width: 360px;
             background: rgba(255,255,255,0.98);
             border-radius: 28px;
@@ -529,12 +534,14 @@
             .nav-links { gap: 6px; }
             .nav-links a { font-size: 0.9rem; }
             .navbar-brand { font-size: 1.4rem; }
-            .dragon-front { width: 300px; }
+            .dragon-front { width: 500px; }
+            .dragon-front.small { width: 300px; }
             .navbar-custom .container-custom { padding-left: 30px; }
             .content-wrapper { margin-left: 40px; }
         }
         @media (max-width: 768px) {
-            .dragon-front { width: 200px; right: -30px; bottom: 10px; }
+            .dragon-front { width: 400px; right: -30px; }
+            .dragon-front.small { width: 220px; right: -20px; }
             .hero-text-block { background: transparent; margin: 30px 0; margin-left: 15px; }
             .hero-title { font-size: 2rem; }
             .nav-links { display: none; }
@@ -543,7 +550,8 @@
             .content-wrapper { margin-left: 20px; }
         }
         @media (max-width: 550px) {
-            .dragon-front { width: 140px; right: -20px; }
+            .dragon-front { width: 280px; right: -20px; }
+            .dragon-front.small { width: 160px; }
             .hero-title { font-size: 1.9rem; }
             .chat-popup { width: 280px; left: 10px; bottom: 70px; }
             .content-wrapper { margin-left: 10px; }
@@ -844,6 +852,24 @@
         langRu.classList.remove('active');
         console.log('Выбран татарский язык');
     });
+
+    // Управление размером дракона при скролле
+    const dragon = document.querySelector('.dragon-front');
+    const coursesSection = document.getElementById('courses');
+    if (coursesSection) {
+        const adjustDragonSize = () => {
+            const scrollY = window.scrollY;
+            const coursesTop = coursesSection.offsetTop;
+            // Если прокрутили ниже начала секции курсов (минус небольшой отступ)
+            if (scrollY + 100 > coursesTop) {
+                dragon.classList.add('small');
+            } else {
+                dragon.classList.remove('small');
+            }
+        };
+        window.addEventListener('scroll', adjustDragonSize);
+        adjustDragonSize(); // Вызов при загрузке
+    }
 
     // AI чат — открывается/закрывается по клику на дракона справа
     let conversationHistory = [
