@@ -62,7 +62,7 @@
         /* Навигация — все элементы в одну строку без переноса, сдвинута левее, поднята выше */
         .navbar-custom {
             background: transparent;
-            padding: 8px 0;           /* уменьшен отступ сверху/снизу, чтобы поднять панель (было 20px) */
+            padding: 8px 0;
             transition: all 0.3s ease;
             position: relative;
             z-index: 20;
@@ -72,7 +72,7 @@
             max-width: none;
             margin: 0;
             padding: 0 32px;
-            padding-left: 10px;          /* уменьшен сдвиг влево */
+            padding-left: 10px;
             position: relative;
             transform: none;
             display: flex;
@@ -137,9 +137,9 @@
             border: 2px solid #6a8a5a;
             background: white;
             color: #1a3a1a;
-            padding: 6px 18px;           /* чуть больше для лучшего вида */
+            padding: 6px 18px;
             border-radius: 40px;
-            font-size: 0.9rem;            /* увеличен шрифт */
+            font-size: 0.9rem;
             font-weight: 600;
             transition: 0.2s;
             text-decoration: none;
@@ -185,14 +185,14 @@
             gap: 6px;
             font-weight: 600;
             color: #1a3a1a;
-            font-size: 1rem;             /* увеличен шрифт */
+            font-size: 1rem;
         }
         .stat-item i {
             color: #e8b830;
             font-size: 1rem;
         }
         .text-dark {
-            font-size: 1rem;             /* увеличен шрифт для email */
+            font-size: 1rem;
             white-space: nowrap;
         }
 
@@ -257,11 +257,11 @@
             color: white;
         }
 
-        /* Дракон — сдвинут чуть правее (ближе к краю) */
+        /* Дракон — сдвинут ПРАВЕЕ к краю (дальше от текста) */
         .dragon-front {
             position: fixed;
             bottom: 20px;
-            right: -10px;
+            right: -50px;               /* сдвинут значительно правее */
             width: 350px;
             max-width: 45vw;
             z-index: 100;
@@ -273,11 +273,11 @@
             transform: scale(1.03);
         }
 
-        /* Чат-поп-ап (справа возле дракона) */
+        /* Чат-поп-ап — теперь слева и ниже */
         .chat-popup {
             position: fixed;
-            bottom: 220px;
-            right: 30px;
+            bottom: 100px;              /* ниже, чем было (220px) */
+            left: 835px;                /* левее */
             width: 360px;
             background: rgba(255,255,255,0.98);
             border-radius: 28px;
@@ -534,18 +534,18 @@
             .content-wrapper { margin-left: 40px; }
         }
         @media (max-width: 768px) {
-            .dragon-front { width: 200px; right: -10px; bottom: 10px; }
+            .dragon-front { width: 200px; right: -30px; bottom: 10px; }
             .hero-text-block { background: transparent; margin: 30px 0; margin-left: 15px; }
             .hero-title { font-size: 2rem; }
             .nav-links { display: none; }
             .navbar-custom .container-custom { padding: 0 16px; padding-left: 20px; flex-wrap: wrap; }
-            .chat-popup { width: 300px; right: 20px; bottom: 160px; }
+            .chat-popup { width: 300px; left: 10px; bottom: 80px; }
             .content-wrapper { margin-left: 20px; }
         }
         @media (max-width: 550px) {
-            .dragon-front { width: 140px; }
+            .dragon-front { width: 140px; right: -20px; }
             .hero-title { font-size: 1.9rem; }
-            .chat-popup { width: 280px; right: 10px; }
+            .chat-popup { width: 280px; left: 10px; bottom: 70px; }
             .content-wrapper { margin-left: 10px; }
             .navbar-custom .container-custom { padding-left: 15px; }
             .hero-text-block { margin-left: 10px; }
@@ -561,10 +561,10 @@
     </div>
 </div>
 
-<!-- Дракон переднего плана (увеличен) -->
+<!-- Дракон переднего плана (увеличен, сдвинут правее) -->
 <img src="https://i.imgur.com/swvWgEt.png" class="dragon-front" id="dinoBtn" alt="Дракон TatarSkill">
 
-<!-- Чат-поп-ап (справа возле дракона) -->
+<!-- Чат-поп-ап (слева, ниже) -->
 <div class="chat-popup" id="chatPopup">
     <div class="chat-header" id="closeChat">
         <span><i class="fas fa-robot me-2"></i> ИИ-репетитор · Татарча</span>
