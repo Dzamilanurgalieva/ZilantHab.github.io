@@ -59,10 +59,10 @@
             width: 100%;
         }
 
-        /* Навигация — все элементы в одну строку без переноса */
+        /* Навигация — все элементы в одну строку без переноса, сдвинута левее, поднята выше */
         .navbar-custom {
             background: transparent;
-            padding: 20px 0;
+            padding: 8px 0;           /* уменьшен отступ сверху/снизу, чтобы поднять панель (было 20px) */
             transition: all 0.3s ease;
             position: relative;
             z-index: 20;
@@ -72,18 +72,18 @@
             max-width: none;
             margin: 0;
             padding: 0 32px;
-            padding-left: 80px;
+            padding-left: 10px;          /* уменьшен сдвиг влево */
             position: relative;
             transform: none;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-wrap: nowrap;   /* гарантия одной строки */
+            flex-wrap: nowrap;
         }
         .navbar-custom.scrolled {
             background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(12px);
-            padding: 12px 0;
+            padding: 8px 0;
             border-bottom: 1px solid rgba(0,0,0,0.1);
         }
         .navbar-brand {
@@ -101,14 +101,14 @@
         }
         .nav-links {
             display: flex;
-            gap: 12px;              /* уменьшен отступ для лучшего размещения */
+            gap: 8px;
             align-items: center;
             flex-wrap: nowrap;
         }
         .nav-links a {
             color: #1a3a1a;
             font-weight: 500;
-            font-size: 0.85rem;
+            font-size: 1rem;
             transition: 0.2s;
             text-decoration: none;
             white-space: nowrap;
@@ -122,7 +122,7 @@
             color: #1a3a1a;
             padding: 4px 10px;
             border-radius: 40px;
-            font-size: 0.75rem;
+            font-size: 1rem;
             font-weight: 500;
             transition: all 0.2s;
             cursor: pointer;
@@ -137,9 +137,9 @@
             border: 2px solid #6a8a5a;
             background: white;
             color: #1a3a1a;
-            padding: 4px 14px;
+            padding: 6px 18px;           /* чуть больше для лучшего вида */
             border-radius: 40px;
-            font-size: 0.75rem;
+            font-size: 0.9rem;            /* увеличен шрифт */
             font-weight: 600;
             transition: 0.2s;
             text-decoration: none;
@@ -154,8 +154,8 @@
             border: none;
             color: white;
             font-weight: 700;
-            padding: 4px 14px;
-            font-size: 0.75rem;
+            padding: 6px 18px;
+            font-size: 0.9rem;
             border-radius: 40px;
             transition: all 0.3s;
             box-shadow: 0 4px 12px rgba(124,179,66,0.3);
@@ -167,38 +167,44 @@
             box-shadow: 0 8px 18px rgba(124,179,66,0.4);
             color: white;
         }
+        /* Специально для кнопки "Начать обучение" в карточке курса — сделать чуть больше */
+        .course-sale .btn-primary-custom {
+            padding: 8px 24px;
+            font-size: 1rem;
+        }
         .user-stats {
             display: flex;
-            gap: 8px;
+            gap: 10px;
             align-items: center;
-            margin-right: 6px;
+            margin-right: 8px;
             white-space: nowrap;
         }
         .stat-item {
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 6px;
             font-weight: 600;
             color: #1a3a1a;
-            font-size: 0.8rem;
+            font-size: 1rem;             /* увеличен шрифт */
         }
         .stat-item i {
             color: #e8b830;
+            font-size: 1rem;
         }
         .text-dark {
-            font-size: 0.8rem;
+            font-size: 1rem;             /* увеличен шрифт для email */
             white-space: nowrap;
         }
 
-        /* Левый текстовый блок — увеличенная ширина */
+        /* Левый текстовый блок — сдвинут чуть левее, буквы крупнее */
         .hero-text-block {
             background: transparent;
             backdrop-filter: none;
             border-radius: 0;
             padding: 32px 40px;
-            max-width: 750px;          /* увеличено для большего охвата */
+            max-width: 780px;
             margin-top: 60px;
-            margin-left: 60px;
+            margin-left: 0px;
             box-shadow: none;
             border: none;
         }
@@ -207,13 +213,13 @@
             background: rgba(100, 140, 80, 0.15);
             padding: 6px 16px;
             border-radius: 100px;
-            font-size: 0.8rem;
+            font-size: 0.9rem;
             font-weight: 500;
             color: #1a3a1a;
             margin-bottom: 20px;
         }
         .hero-title {
-            font-size: 3.2rem;
+            font-size: 3.5rem;
             font-weight: 800;
             line-height: 1.2;
             margin-bottom: 20px;
@@ -226,7 +232,7 @@
             color: transparent;
         }
         .hero-text {
-            font-size: 1rem;
+            font-size: 1.1rem;
             line-height: 1.5;
             color: #2a4a2a;
             margin-bottom: 28px;
@@ -251,12 +257,12 @@
             color: white;
         }
 
-        /* Дракон — немного меньше и сдвинут правее (ближе к краю) */
+        /* Дракон — сдвинут чуть правее (ближе к краю) */
         .dragon-front {
             position: fixed;
             bottom: 20px;
-            right: 5px;               /* ближе к правому краю */
-            width: 350px;             /* уменьшен */
+            right: -10px;
+            width: 350px;
             max-width: 45vw;
             z-index: 100;
             cursor: pointer;
@@ -314,7 +320,7 @@
             background: #fafdf8;
         }
 
-        /* Карточки курсов, сообществ — сдвинуты вправо */
+        /* Карточки курсов, сообществ — сдвинуты вправо (оставляем как было) */
         .content-wrapper {
             margin-left: 60px;
         }
@@ -518,20 +524,21 @@
         }
 
         @media (max-width: 992px) {
-            .hero-text-block { max-width: 100%; margin-top: 40px; padding: 24px 28px; margin-left: 40px; }
-            .hero-title { font-size: 2.4rem; }
-            .nav-links { gap: 10px; }
-            .nav-links a { font-size: 0.75rem; }
+            .hero-text-block { max-width: 100%; margin-top: 40px; padding: 24px 28px; margin-left: 20px; }
+            .hero-title { font-size: 2.8rem; }
+            .nav-links { gap: 6px; }
+            .nav-links a { font-size: 0.9rem; }
             .navbar-brand { font-size: 1.4rem; }
             .dragon-front { width: 300px; }
-            .navbar-custom .container-custom { padding-left: 50px; }
+            .navbar-custom .container-custom { padding-left: 30px; }
             .content-wrapper { margin-left: 40px; }
         }
         @media (max-width: 768px) {
-            .dragon-front { width: 200px; right: 5px; bottom: 10px; }
-            .hero-text-block { background: transparent; margin: 30px 0; margin-left: 20px; }
+            .dragon-front { width: 200px; right: -10px; bottom: 10px; }
+            .hero-text-block { background: transparent; margin: 30px 0; margin-left: 15px; }
+            .hero-title { font-size: 2rem; }
             .nav-links { display: none; }
-            .navbar-custom .container-custom { padding: 0 16px; padding-left: 30px; flex-wrap: wrap; }
+            .navbar-custom .container-custom { padding: 0 16px; padding-left: 20px; flex-wrap: wrap; }
             .chat-popup { width: 300px; right: 20px; bottom: 160px; }
             .content-wrapper { margin-left: 20px; }
         }
