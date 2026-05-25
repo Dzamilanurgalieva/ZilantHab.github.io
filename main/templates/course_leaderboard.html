@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block title %}Рейтинг курса «{{ course.title }}»{% endblock %}
+
+{% block content %}
+<div class="container-custom py-5" style="margin-top: 100px;">
+    <div class="card-glass p-4">
+        <h1 class="section-title text-center mb-4">🏆 Рейтинг курса<br>{{ course.title }}</h1>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Пользователь</th>
+                        <th>Пройдено уроков</th>
+                        <th>Опыт в курсе</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in leaderboard %}
+                    <tr class="{% if entry.username == request.user.username %}table-success fw-bold{% endif %}">
+                        <td>{{ entry.rank }}</td>
+                        <td>{{ entry.username }}</td>
+                        <td>{{ entry.lessons_completed }}</td>
+                        <td>{{ entry.course_xp }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4" class="text-center">Пока никто не записан на курс</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="mt-3 text-center">
+            <a href="{% url 'course_detail' course.slug %}" class="btn-outline-custom">← Назад к курсу</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -15,21 +15,38 @@ from .models import (
     Course, Community, Achievement, Lesson, Question, LessonCompletion, Profile,
     League, LeagueInstance, UserLeagueMembership, SeasonalEvent, AchievementLevel,
     AchievementProgress, ShopItem, UserInventory, UserSubscription, DailyRewardLog,
-    LEVEL_XP_BOUNDS
+    LEVEL_XP_BOUNDS, CourseEnrollment
 )
 
 mistral_service = MistralService()
 
 
 # ---------- СУЩЕСТВУЮЩИЕ VIEW ----------
+
 def home(request):
     courses = Course.objects.filter(status='published').order_by('order', '-created_at')
     communities = Community.objects.filter(is_active=True).order_by('order', 'name')
     achievements = Achievement.objects.filter(is_active=True)
+
+    # Получаем топ-3 пользователей по курсу "Татарский язык с нуля"
+    clan_leaderboard = []
+    try:
+        course = Course.objects.get(slug='tatarskii-yazyk-s-nulya', status='published')
+        enrollments = CourseEnrollment.objects.filter(course=course).select_related('user').order_by('-course_xp')[:3]
+        for enrollment in enrollments:
+            clan_leaderboard.append({
+                'username': enrollment.user.username,
+                'lessons_completed': enrollment.lessons_completed,
+                'course_xp': enrollment.course_xp,
+            })
+    except Course.DoesNotExist:
+        pass
+
     context = {
         'courses': courses,
         'communities': communities,
         'achievements': achievements,
+        'clan_leaderboard': clan_leaderboard,
     }
     return render(request, 'index.html', context)
 
@@ -135,8 +152,7 @@ def course_detail(request, slug):
     completed_lessons = set()
     if request.user.is_authenticated:
         completed_lessons = set(
-            LessonCompletion.objects.filter(user=request.user, lesson__course=course).values_list('lesson_id',
-                                                                                                  flat=True))
+            LessonCompletion.objects.filter(user=request.user, lesson__course=course).values_list('lesson_id', flat=True))
     unlocked_lessons = set()
     if request.user.is_authenticated:
         unlocked_lessons.update(completed_lessons)
@@ -243,7 +259,6 @@ def submit_test(request, lesson_id):
     questions = list(lesson.questions.all())
     total_questions = len(questions)
 
-    # Подсчёт правильных ответов
     correct_count = 0
     for question in questions:
         answer_key = f'question_{question.id}'
@@ -251,22 +266,37 @@ def submit_test(request, lesson_id):
         if selected_option and int(selected_option) == question.correct_option:
             correct_count += 1
 
-    # Вычисляем процент
     percentage = (correct_count / total_questions * 100) if total_questions > 0 else 0
 
-    # ВСЕГДА сохраняем прохождение, даже если процент ниже 70
     completion, created = LessonCompletion.objects.get_or_create(
         user=request.user,
         lesson=lesson,
         defaults={'test_score': percentage}
     )
 
-    # Обновляем процент, если он стал выше
     if not created and completion.test_score < percentage:
         completion.test_score = percentage
         completion.save()
 
-    # Начисляем награды ТОЛЬКО за первое прохождение (независимо от процента)
+    # === НОВОЕ: обновляем прогресс в курсе ===
+    enrollment, _ = CourseEnrollment.objects.get_or_create(
+        user=request.user,
+        course=lesson.course
+    )
+    # Пересчитываем количество уникальных пройденных уроков в этом курсе
+    unique_lessons_count = LessonCompletion.objects.filter(
+        user=request.user,
+        lesson__course=lesson.course
+    ).values('lesson').distinct().count()
+    enrollment.lessons_completed = unique_lessons_count
+    # Начисляем XP за этот урок, только если он пройден впервые
+    if created:
+        enrollment.course_xp += 150
+        enrollment.save()
+    else:
+        enrollment.save()  # сохраняем lessons_completed, даже если повторная сдача
+
+    # === Начисление глобальных наград (монеты, общий XP) ===
     if created:
         profile = request.user.profile
         profile.total_points += 150
@@ -277,9 +307,49 @@ def submit_test(request, lesson_id):
     else:
         messages.info(request, f'Тест пройден повторно. Результат: {percentage:.0f}%')
 
-    # Перенаправляем на страницу курса, чтобы показать разблокированные уроки
+    # Проверяем достижения, привязанные к курсу
+    check_course_achievements(request.user, lesson.course, enrollment)
+
     return redirect('course_detail', slug=lesson.course.slug)
 
+
+# === НОВАЯ ФУНКЦИЯ: проверка достижений для конкретного курса ===
+def check_course_achievements(user, course, enrollment):
+    # Получаем все достижения, привязанные к этому курсу
+    achievements = Achievement.objects.filter(course=course, is_active=True)
+    for ach in achievements:
+        levels = ach.levels.all()
+        if levels:
+            progress, _ = AchievementProgress.objects.get_or_create(user=user, achievement=ach)
+            old_value = progress.current_value
+            # Например, используем lessons_completed для проверки
+            new_value = enrollment.lessons_completed
+            if new_value > old_value:
+                progress.current_value = new_value
+                progress.save()
+                progress.check_and_update()  # вызовет награду, если достигнут новый уровень
+
+
+# === НОВОЕ ПРЕДСТАВЛЕНИЕ: рейтинг курса (для отдельной страницы) ===
+def course_leaderboard(request, slug):
+    course = get_object_or_404(Course, slug=slug, status='published')
+    enrollments = CourseEnrollment.objects.filter(course=course).select_related('user').order_by('-course_xp')
+    leaderboard = []
+    for idx, enrollment in enumerate(enrollments, start=1):
+        leaderboard.append({
+            'rank': idx,
+            'username': enrollment.user.username,
+            'lessons_completed': enrollment.lessons_completed,
+            'course_xp': enrollment.course_xp,
+        })
+    context = {
+        'course': course,
+        'leaderboard': leaderboard,
+    }
+    return render(request, 'course_leaderboard.html', context)
+
+
+# ---------- ОСТАЛЬНЫЕ VIEW (лиги, магазин, достижения) ----------
 
 def find_or_create_league_instance_for_user(user):
     league = League.objects.filter(rank_order=1).first()
@@ -298,8 +368,7 @@ def league_table(request):
         messages.info(request, 'Вы ещё не попали в лигу. Пройдите несколько уроков.')
         return redirect('profile')
     league_instance = membership.league_instance
-    all_members = UserLeagueMembership.objects.filter(league_instance=league_instance, week_start=week_start).order_by(
-        '-weekly_xp')
+    all_members = UserLeagueMembership.objects.filter(league_instance=league_instance, week_start=week_start).order_by('-weekly_xp')
     for idx, m in enumerate(all_members, start=1):
         m.rank = idx
     user_rank = next((idx for idx, m in enumerate(all_members, start=1) if m.user == request.user), None)
@@ -379,6 +448,14 @@ def achievements_list(request):
     return render(request, 'achievements.html', context)
 
 
+def update_achievement_progress(user, achievement, current_value):
+    progress, created = AchievementProgress.objects.get_or_create(user=user, achievement=achievement)
+    if current_value > progress.current_value:
+        progress.current_value = current_value
+        progress.save()
+        progress.check_and_update()
+
+
 def check_achievements_on_lesson_complete(user, lesson):
     profile = user.profile
     ach = Achievement.objects.filter(name='Первый шаг').first()
@@ -399,9 +476,20 @@ def check_achievements_on_lesson_complete(user, lesson):
         update_achievement_progress(user, ach, profile.total_points)
 
 
-def update_achievement_progress(user, achievement, current_value):
-    progress, created = AchievementProgress.objects.get_or_create(user=user, achievement=achievement)
-    if current_value > progress.current_value:
-        progress.current_value = current_value
-        progress.save()
-        progress.check_and_update()
+# === НОВОЕ ПРЕДСТАВЛЕНИЕ: рейтинг начального клана (отдельная страница) ===
+def clan_leaderboard(request):
+    course = get_object_or_404(Course, slug='tatarskii-yazyk-s-nulya', status='published')
+    enrollments = CourseEnrollment.objects.filter(course=course).select_related('user').order_by('-course_xp')
+    leaderboard = []
+    for idx, enrollment in enumerate(enrollments, start=1):
+        leaderboard.append({
+            'rank': idx,
+            'username': enrollment.user.username,
+            'lessons_completed': enrollment.lessons_completed,
+            'course_xp': enrollment.course_xp,
+        })
+    context = {
+        'course': course,
+        'leaderboard': leaderboard,
+    }
+    return render(request, 'clan_leaderboard.html', context)

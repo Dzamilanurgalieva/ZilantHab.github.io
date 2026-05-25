@@ -109,6 +109,8 @@ class Achievement(models.Model):
     description = models.CharField('Описание', max_length=200)
     points = models.PositiveIntegerField('Очки', default=10)
     is_active = models.BooleanField('Активно', default=True)
+    # НОВОЕ: привязка к курсу (опционально)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, null=True, blank=True, verbose_name="Привязанный курс")
 
     class Meta:
         verbose_name = 'Достижение'
@@ -134,7 +136,6 @@ class Question(models.Model):
     option4 = models.CharField('Вариант 4', max_length=200, blank=True)
     correct_option = models.PositiveSmallIntegerField('Номер правильного ответа (1-4)', choices=[(i, str(i)) for i in range(1, 5)])
     explanation = models.TextField('Пояснение к ответу', blank=True)
-    # Новые поля для Duolingo-подобных тестов
     question_type = models.CharField(max_length=20, choices=QUESTION_TYPES, default='choice', verbose_name='Тип вопроса')
     audio_url = models.URLField('Ссылка на аудиофайл', blank=True, help_text='Для типа "audio_choice"')
 
@@ -147,7 +148,6 @@ class Question(models.Model):
         return f'{self.lesson.title} - {self.text[:50]}'
 
     def get_options(self):
-        """Возвращает список (номер, текст варианта) для удобного вывода в шаблоне"""
         options = [(1, self.option1), (2, self.option2)]
         if self.option3:
             options.append((3, self.option3))
@@ -171,8 +171,23 @@ class LessonCompletion(models.Model):
         return f'{self.user.username} - {self.lesson.title}'
 
 
-# ---------- НОВЫЕ МОДЕЛИ (расширение профиля, лиги, экономика) ----------
+# ---------- НОВАЯ МОДЕЛЬ: Запись на курс и прогресс внутри курса ----------
+class CourseEnrollment(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='course_enrollments')
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='enrollments')
+    enrolled_at = models.DateTimeField(auto_now_add=True)
+    lessons_completed = models.PositiveIntegerField(default=0)
+    course_xp = models.PositiveIntegerField(default=0)   # XP, полученные за этот курс
+    last_activity = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        unique_together = ['user', 'course']
+
+    def __str__(self):
+        return f"{self.user.username} – {self.course.title}"
+
+
+# ---------- Модели для лиг, профиля, экономики (без изменений) ----------
 # Таблица границ уровней XP
 LEVEL_XP_BOUNDS = {
     1: (0, 59),

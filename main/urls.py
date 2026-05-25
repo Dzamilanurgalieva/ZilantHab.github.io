@@ -26,6 +26,9 @@ urlpatterns = [
     path('achievements/', views.achievements_list, name='achievements'),
 
     path('api/check-answer/', views.check_answer_ajax, name='check_answer_ajax'),
+# НОВЫЙ МАРШРУТ ДЛЯ РЕЙТИНГА КУРСА (страница кланов)
+    path('clan-leaderboard/', views.clan_leaderboard, name='clan_leaderboard'),
+
 
     # TTS для озвучки (если будете использовать)
     # path('tts/', views.tts, name='tts'),  # раскомментируйте, когда добавите функцию tts в views.py

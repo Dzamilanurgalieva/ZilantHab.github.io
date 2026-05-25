@@ -12,8 +12,6 @@
         </div>
 
         <!-- ПРОГРЕСС ПРОХОЖДЕНИЯ КУРСА -->
-                <!-- ПРОГРЕСС ПРОХОЖДЕНИЯ КУРСА (с учётом процентов тестов) -->
-                <!-- ПРОГРЕСС ПРОХОЖДЕНИЯ КУРСА (по количеству уроков) -->
         <div class="mb-4">
             <div class="d-flex justify-content-between mb-1">
                 <span class="text-dark fw-semibold">Прогресс курса</span>
@@ -77,6 +75,10 @@
                         <li class="mb-2"><i class="fas fa-video me-2"></i> Уроков: {{ course.lessons_count }}</li>
                         <li class="mb-2"><i class="fas fa-tag me-2"></i> Цена: {% if course.is_free %}<span class="text-success fw-bold">Бесплатно</span>{% else %}{{ course.price }} ₽{% endif %}</li>
                     </ul>
+                    <!-- НОВАЯ КНОПКА РЕЙТИНГА -->
+                    <a href="{% url 'course_leaderboard' course.slug %}" class="btn-outline-custom w-100 mt-2 text-center">
+                        🏆 Рейтинг курса
+                    </a>
                     {% if user.is_authenticated %}
                         {% with first_lesson=lessons.first %}
                             {% if first_lesson and first_lesson.id in unlocked_lessons %}
