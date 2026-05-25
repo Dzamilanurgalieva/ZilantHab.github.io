@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}Мои друзья{% endblock %}
+
+{% block content %}
+<div class="container-custom py-5" style="margin-top: 100px;">
+    <div class="card-glass p-4">
+        <h1 class="section-title mb-4">Мои друзья</h1>
+        <div class="row">
+            {% for friend in friends %}
+            <div class="col-md-4 mb-3">
+                <div class="bg-light p-3 rounded text-center">
+                    <i class="fas fa-user-circle fa-3x mb-2"></i>
+                    <h5>{{ friend.user.username }}</h5>
+                    <a href="{% url 'user_profile' friend.user.id %}" class="btn-outline-custom btn-sm">Просмотр</a>
+                </div>
+            </div>
+            {% empty %}
+            <p>У вас пока нет друзей.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

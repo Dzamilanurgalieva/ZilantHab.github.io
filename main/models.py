@@ -109,7 +109,6 @@ class Achievement(models.Model):
     description = models.CharField('Описание', max_length=200)
     points = models.PositiveIntegerField('Очки', default=10)
     is_active = models.BooleanField('Активно', default=True)
-    # НОВОЕ: привязка к курсу (опционально)
     course = models.ForeignKey(Course, on_delete=models.CASCADE, null=True, blank=True, verbose_name="Привязанный курс")
 
     class Meta:
@@ -177,7 +176,7 @@ class CourseEnrollment(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='enrollments')
     enrolled_at = models.DateTimeField(auto_now_add=True)
     lessons_completed = models.PositiveIntegerField(default=0)
-    course_xp = models.PositiveIntegerField(default=0)   # XP, полученные за этот курс
+    course_xp = models.PositiveIntegerField(default=0)
     last_activity = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -187,8 +186,22 @@ class CourseEnrollment(models.Model):
         return f"{self.user.username} – {self.course.title}"
 
 
+# ---------- НОВАЯ МОДЕЛЬ: Заявки в друзья ----------
+class FriendRequest(models.Model):
+    from_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_friend_requests')
+    to_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_friend_requests')
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_accepted = models.BooleanField(default=False)
+    is_rejected = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ['from_user', 'to_user']
+
+    def __str__(self):
+        return f"{self.from_user.username} -> {self.to_user.username}"
+
+
 # ---------- Модели для лиг, профиля, экономики (без изменений) ----------
-# Таблица границ уровней XP
 LEVEL_XP_BOUNDS = {
     1: (0, 59),
     2: (60, 119),
@@ -233,6 +246,7 @@ class Profile(models.Model):
     best_league_rank = models.PositiveIntegerField('Лучший результат в лиге (место)', null=True, blank=True)
     created_at = models.DateTimeField('Дата регистрации', auto_now_add=True)
     last_active = models.DateTimeField('Последняя активность', auto_now=True)
+    friends = models.ManyToManyField('self', symmetrical=True, blank=True)
 
     class Meta:
         verbose_name = 'Профиль'
@@ -417,7 +431,6 @@ class DailyRewardLog(models.Model):
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
         Profile.objects.create(user=instance)
-
 
 @receiver(post_save, sender=User)
 def save_user_profile(sender, instance, **kwargs):

@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Профиль {{ profile_user.username }}{% endblock %}
+
+{% block content %}
+<div class="container-custom py-5" style="margin-top: 100px;">
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card-glass p-4 text-center">
+                <div class="mb-3">
+                    <i class="fas fa-user-circle fa-5x" style="color: var(--brand-gold);"></i>
+                </div>
+                <h3 class="text-dark">{{ profile_user.username }}</h3>
+                <p class="text-secondary">{{ profile_user.email }}</p>
+                <hr class="border-secondary">
+                <p class="text-secondary">
+                    <i class="fas fa-calendar me-2"></i>
+                    Зарегистрирован: {{ profile_user.date_joined|date:"d.m.Y" }}
+                </p>
+                {% if not is_friend and not sent_request and not received_request and profile_user != request.user %}
+                    <a href="{% url 'send_friend_request' profile_user.id %}" class="btn-primary-custom w-100 mt-3">Добавить в друзья</a>
+                {% elif sent_request %}
+                    <button class="btn-secondary w-100 mt-3" disabled>Заявка отправлена</button>
+                {% elif received_request %}
+                    <div class="mt-3">
+                        <p class="text-info">Пользователь отправил вам заявку</p>
+                        <a href="{% url 'accept_friend_request' received_request.id %}" class="btn-sm btn-success">Принять</a>
+                        <a href="{% url 'reject_friend_request' received_request.id %}" class="btn-sm btn-danger">Отклонить</a>
+                    </div>
+                {% elif is_friend %}
+                    <button class="btn-secondary w-100 mt-3" disabled>Вы уже друзья</button>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="card-glass p-4">
+                <h3 class="text-dark mb-4">Статистика обучения</h3>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="bg-light rounded p-3 text-center">
+                            <i class="fas fa-book fa-2x text-success mb-2"></i>
+                            <h4 class="text-dark">{{ profile_user.profile.lessons_completed|default:0 }}</h4>
+                            <p class="text-secondary">Пройдено уроков</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="bg-light rounded p-3 text-center">
+                            <i class="fas fa-star fa-2x text-warning mb-2"></i>
+                            <h4 class="text-dark">{{ profile_user.profile.total_points|default:0 }}</h4>
+                            <p class="text-secondary">Всего очков</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

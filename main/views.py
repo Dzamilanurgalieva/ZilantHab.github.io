@@ -15,7 +15,7 @@ from .models import (
     Course, Community, Achievement, Lesson, Question, LessonCompletion, Profile,
     League, LeagueInstance, UserLeagueMembership, SeasonalEvent, AchievementLevel,
     AchievementProgress, ShopItem, UserInventory, UserSubscription, DailyRewardLog,
-    LEVEL_XP_BOUNDS, CourseEnrollment
+    LEVEL_XP_BOUNDS, CourseEnrollment, FriendRequest
 )
 
 mistral_service = MistralService()
@@ -28,7 +28,6 @@ def home(request):
     communities = Community.objects.filter(is_active=True).order_by('order', 'name')
     achievements = Achievement.objects.filter(is_active=True)
 
-    # Получаем топ-3 пользователей по курсу "Татарский язык с нуля"
     clan_leaderboard = []
     try:
         course = Course.objects.get(slug='tatarskii-yazyk-s-nulya', status='published')
@@ -36,6 +35,7 @@ def home(request):
         for enrollment in enrollments:
             clan_leaderboard.append({
                 'username': enrollment.user.username,
+                'user_id': enrollment.user.id,
                 'lessons_completed': enrollment.lessons_completed,
                 'course_xp': enrollment.course_xp,
             })
@@ -110,10 +110,70 @@ def logout_view(request):
 @login_required
 def profile_view(request):
     achievements = Achievement.objects.filter(is_active=True)
-    return render(request, 'profile.html', {
+    friend_requests = FriendRequest.objects.filter(to_user=request.user, is_accepted=False, is_rejected=False)
+    context = {
         'user': request.user,
-        'achievements': achievements
-    })
+        'achievements': achievements,
+        'friend_requests': friend_requests,
+    }
+    return render(request, 'profile.html', context)
+
+
+@login_required
+def user_profile_view(request, user_id):
+    target_user = get_object_or_404(User, id=user_id)
+    if target_user == request.user:
+        return redirect('profile')
+    is_friend = request.user.profile.friends.filter(id=target_user.profile.id).exists()
+    sent_request = FriendRequest.objects.filter(from_user=request.user, to_user=target_user, is_accepted=False, is_rejected=False).exists()
+    received_request = FriendRequest.objects.filter(from_user=target_user, to_user=request.user, is_accepted=False, is_rejected=False).first()
+    context = {
+        'profile_user': target_user,
+        'is_friend': is_friend,
+        'sent_request': sent_request,
+        'received_request': received_request,
+    }
+    return render(request, 'user_profile.html', context)
+
+
+@login_required
+def friends_list_view(request):
+    friends = request.user.profile.friends.all()
+    return render(request, 'friends_list.html', {'friends': friends})
+
+
+@login_required
+def send_friend_request(request, user_id):
+    to_user = get_object_or_404(User, id=user_id)
+    if to_user == request.user:
+        messages.error(request, 'Нельзя добавить самого себя')
+        return redirect('user_profile', user_id=user_id)
+    if FriendRequest.objects.filter(from_user=request.user, to_user=to_user, is_accepted=False, is_rejected=False).exists():
+        messages.info(request, 'Заявка уже отправлена')
+        return redirect('user_profile', user_id=user_id)
+    FriendRequest.objects.create(from_user=request.user, to_user=to_user)
+    messages.success(request, f'Заявка в друзья отправлена пользователю {to_user.username}')
+    return redirect('user_profile', user_id=user_id)
+
+
+@login_required
+def accept_friend_request(request, request_id):
+    friend_req = get_object_or_404(FriendRequest, id=request_id, to_user=request.user, is_accepted=False, is_rejected=False)
+    friend_req.is_accepted = True
+    friend_req.save()
+    request.user.profile.friends.add(friend_req.from_user.profile)
+    friend_req.from_user.profile.friends.add(request.user.profile)
+    messages.success(request, f'Вы добавили {friend_req.from_user.username} в друзья')
+    return redirect('profile')
+
+
+@login_required
+def reject_friend_request(request, request_id):
+    friend_req = get_object_or_404(FriendRequest, id=request_id, to_user=request.user, is_accepted=False, is_rejected=False)
+    friend_req.is_rejected = True
+    friend_req.save()
+    messages.info(request, f'Заявка от {friend_req.from_user.username} отклонена')
+    return redirect('profile')
 
 
 @csrf_exempt
@@ -278,25 +338,21 @@ def submit_test(request, lesson_id):
         completion.test_score = percentage
         completion.save()
 
-    # === НОВОЕ: обновляем прогресс в курсе ===
     enrollment, _ = CourseEnrollment.objects.get_or_create(
         user=request.user,
         course=lesson.course
     )
-    # Пересчитываем количество уникальных пройденных уроков в этом курсе
     unique_lessons_count = LessonCompletion.objects.filter(
         user=request.user,
         lesson__course=lesson.course
     ).values('lesson').distinct().count()
     enrollment.lessons_completed = unique_lessons_count
-    # Начисляем XP за этот урок, только если он пройден впервые
     if created:
         enrollment.course_xp += 150
         enrollment.save()
     else:
-        enrollment.save()  # сохраняем lessons_completed, даже если повторная сдача
+        enrollment.save()
 
-    # === Начисление глобальных наград (монеты, общий XP) ===
     if created:
         profile = request.user.profile
         profile.total_points += 150
@@ -307,30 +363,25 @@ def submit_test(request, lesson_id):
     else:
         messages.info(request, f'Тест пройден повторно. Результат: {percentage:.0f}%')
 
-    # Проверяем достижения, привязанные к курсу
     check_course_achievements(request.user, lesson.course, enrollment)
 
     return redirect('course_detail', slug=lesson.course.slug)
 
 
-# === НОВАЯ ФУНКЦИЯ: проверка достижений для конкретного курса ===
 def check_course_achievements(user, course, enrollment):
-    # Получаем все достижения, привязанные к этому курсу
     achievements = Achievement.objects.filter(course=course, is_active=True)
     for ach in achievements:
         levels = ach.levels.all()
         if levels:
             progress, _ = AchievementProgress.objects.get_or_create(user=user, achievement=ach)
             old_value = progress.current_value
-            # Например, используем lessons_completed для проверки
             new_value = enrollment.lessons_completed
             if new_value > old_value:
                 progress.current_value = new_value
                 progress.save()
-                progress.check_and_update()  # вызовет награду, если достигнут новый уровень
+                progress.check_and_update()
 
 
-# === НОВОЕ ПРЕДСТАВЛЕНИЕ: рейтинг курса (для отдельной страницы) ===
 def course_leaderboard(request, slug):
     course = get_object_or_404(Course, slug=slug, status='published')
     enrollments = CourseEnrollment.objects.filter(course=course).select_related('user').order_by('-course_xp')
@@ -338,6 +389,7 @@ def course_leaderboard(request, slug):
     for idx, enrollment in enumerate(enrollments, start=1):
         leaderboard.append({
             'rank': idx,
+            'user_id': enrollment.user.id,
             'username': enrollment.user.username,
             'lessons_completed': enrollment.lessons_completed,
             'course_xp': enrollment.course_xp,
@@ -349,7 +401,7 @@ def course_leaderboard(request, slug):
     return render(request, 'course_leaderboard.html', context)
 
 
-# ---------- ОСТАЛЬНЫЕ VIEW (лиги, магазин, достижения) ----------
+# ---------- ОСТАЛЬНЫЕ VIEW ----------
 
 def find_or_create_league_instance_for_user(user):
     league = League.objects.filter(rank_order=1).first()
@@ -476,7 +528,6 @@ def check_achievements_on_lesson_complete(user, lesson):
         update_achievement_progress(user, ach, profile.total_points)
 
 
-# === НОВОЕ ПРЕДСТАВЛЕНИЕ: рейтинг начального клана (отдельная страница) ===
 def clan_leaderboard(request):
     course = get_object_or_404(Course, slug='tatarskii-yazyk-s-nulya', status='published')
     enrollments = CourseEnrollment.objects.filter(course=course).select_related('user').order_by('-course_xp')

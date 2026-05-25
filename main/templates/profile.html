@@ -42,17 +42,37 @@
                     </div>
                 </div>
 
-                <h4 class="text-dark mt-4 mb-3">Достижения</h4>
-                <div class="row">
-                    {% for achievement in achievements %}
-                    <div class="col-6 col-md-4 mb-3">
-                        <div class="achievement-item locked text-center p-3">
-                            <i class="{{ achievement.icon_class }} fa-2x text-warning mb-2"></i>
-                            <div class="achievement-name text-secondary">{{ achievement.name }}</div>
+                <h4 class="text-dark mt-4 mb-3">Заявки в друзья</h4>
+                <div class="list-group mb-4">
+                    {% for req in friend_requests %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-user-plus text-success me-2"></i>
+                            <strong>{{ req.from_user.username }}</strong> хочет добавить вас в друзья
+                        </div>
+                        <div>
+                            <a href="{% url 'accept_friend_request' req.id %}" class="btn-sm btn-success me-2">Принять</a>
+                            <a href="{% url 'reject_friend_request' req.id %}" class="btn-sm btn-danger">Отклонить</a>
                         </div>
                     </div>
                     {% empty %}
-                    <p class="text-secondary">Выполняйте уроки, чтобы открывать достижения!</p>
+                    <p class="text-secondary">Нет новых заявок</p>
+                    {% endfor %}
+                </div>
+
+                <h4 class="text-dark mt-4 mb-3">Мои друзья</h4>
+                <div class="row">
+                    {% for friend in user.profile.friends.all %}
+                    <div class="col-6 col-md-4 mb-2">
+                        <a href="{% url 'user_profile' friend.user.id %}" class="text-decoration-none">
+                            <div class="bg-light rounded p-2 text-center">
+                                <i class="fas fa-user-circle fa-2x"></i>
+                                <div>{{ friend.user.username }}</div>
+                            </div>
+                        </a>
+                    </div>
+                    {% empty %}
+                    <p class="text-secondary">У вас пока нет друзей</p>
                     {% endfor %}
                 </div>
             </div>

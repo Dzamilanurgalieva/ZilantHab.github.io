@@ -719,9 +719,6 @@
                 <a href="/">Главная</a>
                 <a href="{% url 'all_communities' %}">Сообщества</a>
                 <a href="{% url 'all_courses' %}">Курсы</a>
-                <a href="#">Квесты</a>
-                <a href="#">Маршруты</a>
-                <a href="#">Культура</a>
             </div>
             <div class="d-flex gap-2 align-items-center">
                 <button class="lang-btn active" id="langRu">Рус</button>
@@ -870,14 +867,12 @@
                                                     {{ forloop.counter }}
                                                 {% endif %}
                                             </td>
-                                            <td>
-                                                <div class="user-cell">
-                                                    <div class="user-avatar">
-                                                        {{ user_stat.username|make_list|first|upper }}
-                                                    </div>
-                                                    <span class="username">{{ user_stat.username }}</span>
+                                            <td class="user-cell">
+                                                <div class="user-avatar">
+                                                    {{ user_stat.username|make_list|first|upper }}
                                                 </div>
-                                            </td>
+                                                <a href="{% url 'user_profile' user_stat.user_id %}" class="username">{{ user_stat.username }}</a>
+                                              </td>
                                             <td class="lessons-cell">{{ user_stat.lessons_completed }}</td>
                                             <td class="xp-cell">{{ user_stat.course_xp }}</td>
                                         </tr>

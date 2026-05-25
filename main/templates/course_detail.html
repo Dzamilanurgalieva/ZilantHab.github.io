@@ -69,13 +69,12 @@
             <div class="col-lg-4">
                 <div class="bg-light p-4 rounded-4">
                     <h5 class="text-success">О курсе</h5>
-                    <ul class="list-unstyled">
+                    <ul class="list-unstyled" style="margin-bottom: 20px;">
                         <li class="mb-2"><i class="fas fa-signal me-2"></i> Уровень: {{ course.get_level_display }}</li>
                         <li class="mb-2"><i class="fas fa-clock me-2"></i> Длительность: {{ course.duration_weeks }} нед.</li>
                         <li class="mb-2"><i class="fas fa-video me-2"></i> Уроков: {{ course.lessons_count }}</li>
                         <li class="mb-2"><i class="fas fa-tag me-2"></i> Цена: {% if course.is_free %}<span class="text-success fw-bold">Бесплатно</span>{% else %}{{ course.price }} ₽{% endif %}</li>
                     </ul>
-                    <!-- НОВАЯ КНОПКА РЕЙТИНГА -->
                     <a href="{% url 'course_leaderboard' course.slug %}" class="btn-outline-custom w-100 mt-2 text-center">
                         🏆 Рейтинг курса
                     </a>
@@ -83,8 +82,10 @@
                         {% with first_lesson=lessons.first %}
                             {% if first_lesson and first_lesson.id in unlocked_lessons %}
                                 <a href="{% url 'lesson_detail' course.slug first_lesson.order %}" class="btn-primary-custom w-100 mt-3">Начать обучение</a>
+                            {% elif first_lesson %}
+                                <a href="{% url 'lesson_detail' course.slug first_lesson.order %}" class="btn-primary-custom w-100 mt-3">Начать обучение</a>
                             {% else %}
-                                <button class="btn-secondary w-100 mt-3" disabled>Начать обучение</button>
+                                <button class="btn-secondary w-100 mt-3" disabled>Нет уроков</button>
                             {% endif %}
                         {% endwith %}
                     {% else %}
